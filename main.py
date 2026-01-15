@@ -4,6 +4,7 @@ import argparse
 import logging
 
 from uassetgen import JSON_to_uasset
+from pathlib import Path
 
 DEFAULT_ROOMS_PATH = "/Game/Maps/Rooms/RoomGenerators/"
 
@@ -35,7 +36,7 @@ def main():
         "-o",
         "--output_path",
         nargs="?",
-        default="cache/RMG_ExtractionLinear_patched.uasset",
+        default=Path("cache") / "RMG_ExtractionLinear_patched.uasset",
         help="Path where the patched RMG file will be written. If not specified defaults to cache/",
     )
     parser.add_argument(
@@ -56,7 +57,7 @@ def main():
         return 1
 
     # Getting the necessary data from the default file:
-    with open("assets/RMG_ExtractionLinear.json", "r") as f:
+    with open(Path("assets") / "RMG_ExtractionLinear.json", "r") as f:
         original_rmg = json.load(f)
     export_length = len(original_rmg["Exports"][0]["Data"][0]["Value"])
     default_export_entry = original_rmg["Exports"][0]["Data"][0]["Value"][0]
@@ -112,11 +113,11 @@ def main():
 
     if user_config_file.get("Add") or user_config_file.get("Remove"):
         if args.debug:
-            with open("cache/json_debug.json", "w") as f:
+            with open(Path("cache") / "json_debug.json", "w") as f:
                 json.dump(patched_json, f, indent=4)
             logging.info("Writing debug JSON in cache/json_debug.json")
         try:
-            JSON_to_uasset(patched_json, args.output_path)
+            JSON_to_uasset(patched_json, str(args.output_path))
         except Exception as e:
             logging.error(f"Error when writing the patched UAsset: {e}")
     else:
