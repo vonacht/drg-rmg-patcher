@@ -7,6 +7,7 @@ from uassetgen import JSON_to_uasset
 
 DEFAULT_ROOMS_PATH = "/Game/Maps/Rooms/RoomGenerators/"
 
+
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
 )
@@ -45,14 +46,6 @@ def main():
     )
     args = parser.parse_args()
 
-    # Getting the necessary data from the default file:
-    with open("assets/RMG_ExtractionLinear.json", "r") as f:
-        original_rmg = json.load(f)
-    export_length = len(original_rmg["Exports"][0]["Data"][0]["Value"])
-    default_export_entry = original_rmg["Exports"][0]["Data"][0]["Value"][0]
-    import_length = len(original_rmg["Imports"])
-    default_import = original_rmg["Imports"][0]
-
     # Getting the user configuration file with the rooms to be added/removed:
     try:
         with open(args.config_path, "r") as f:
@@ -62,10 +55,16 @@ def main():
         logging.error(f"Error opening {args.config_path}: {e}")
         return 1
 
-    ## TODO: add jsonschema validation
+    # Getting the necessary data from the default file:
+    with open("assets/RMG_ExtractionLinear.json", "r") as f:
+        original_rmg = json.load(f)
+    export_length = len(original_rmg["Exports"][0]["Data"][0]["Value"])
+    default_export_entry = original_rmg["Exports"][0]["Data"][0]["Value"][0]
+    import_length = len(original_rmg["Imports"])
+    default_import = original_rmg["Imports"][0]
 
     patched_json = copy.deepcopy(original_rmg)
-    if user_config_file["Add"]:
+    if user_config_file.get("Add"):
         for ii, room_to_add in enumerate(user_config_file["Add"]):
             # 1. Patch the imports:
             room_path = DEFAULT_ROOMS_PATH + room_to_add
@@ -97,7 +96,7 @@ def main():
     else:
         logging.info("No room to add found in config file. Skipping.")
 
-    if user_config_file["Remove"]:
+    if user_config_file.get("Remove"):
         for room_to_remove in user_config_file["Remove"]:
             room_idx = find_import_idx(original_rmg["Imports"], room_to_remove)
             if room_idx is None:
@@ -111,7 +110,7 @@ def main():
     else:
         logging.info("No room to remove found in config file. Skipping.")
 
-    if user_config_file["Add"] or user_config_file["Remove"]:
+    if user_config_file.get("Add") or user_config_file.get("Remove"):
         if args.debug:
             with open("cache/json_debug.json", "w") as f:
                 json.dump(patched_json, f, indent=4)
